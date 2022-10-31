@@ -1,2 +1,2 @@
-pendulum==2.1.2
-user-agents==2.2.0
+pendulum
+user-agents

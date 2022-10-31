@@ -1,10 +1,11 @@
+import gzip
+import json
 import re
 import sys
 from collections import namedtuple
-from user_agents import parse as ua_parse
+
 import pendulum
-import gzip
-import json
+from user_agents import parse as ua_parse
 
 Record = namedtuple("AccessLog", [
     "ip",
@@ -21,17 +22,18 @@ Record = namedtuple("AccessLog", [
     "browser"
 ])
 
-LOG_PATTERN = (r''
-               '(\d+.\d+.\d+.\d+)\s-\s-\s' # IP address
-               '\[(.+)\]\s'  # datetime
-               # '"GET\s(.+)\s\w+/.+"\s'  # requested file GET method
-               '"(.+)\s(.+)\s\w+/.+"\s'  # method and requested file. output add 1 field
-               '(\d+)\s'  # status
-               '(\d+)\s'  # bandwidth
-               # '"(.+)"\s'  # referrer not allow empty
-               '"(.*)"\s'  # referrer allow empty
-               '"(.+)"'  # user agent
-               )
+LOG_PATTERN = (
+    r''
+    '(\d+.\d+.\d+.\d+)\s-\s-\s'  # IP address
+    '\[(.+)\]\s'  # datetime
+    # '"GET\s(.+)\s\w+/.+"\s'  # requested file GET method
+    '"(.+)\s(.+)\s\w+/.+"\s'  # method and requested file. output add 1 field
+    '(\d+)\s'  # status
+    '(\d+)\s'  # bandwidth
+    # '"(.+)"\s'  # referrer not allow empty
+    '"(.*)"\s'  # referrer allow empty
+    '"(.+)"'  # user agent
+)
 
 
 def nginx_log_parse(log_str):
@@ -54,11 +56,11 @@ def get_ipv6(log_str):
         '(?:' + IPV6SEG + r':){1,4}(?::' + IPV6SEG + r'){1,3}',  # 1::6:7:8           1:2:3:4::6:7:8   1:2:3:4::8
         '(?:' + IPV6SEG + r':){1,3}(?::' + IPV6SEG + r'){1,4}',  # 1::5:6:7:8         1:2:3::5:6:7:8   1:2:3::8
         '(?:' + IPV6SEG + r':){1,2}(?::' + IPV6SEG + r'){1,5}',  # 1::4:5:6:7:8       1:2::4:5:6:7:8   1:2::8
-        IPV6SEG + r':(?:(?::' + IPV6SEG + r'){1,6})',             # 1::3:4:5:6:7:8     1::3:4:5:6:7:8   1::8
+        IPV6SEG + r':(?:(?::' + IPV6SEG + r'){1,6})',            # 1::3:4:5:6:7:8     1::3:4:5:6:7:8   1::8
         ':(?:(?::' + IPV6SEG + r'){1,7}|:)',                     # ::2:3:4:5:6:7:8    ::2:3:4:5:6:7:8  ::8       ::
         'fe80:(?::' + IPV6SEG + r'){0,4}%[0-9a-zA-Z]{1,}',       # fe80::7:8%eth0     fe80::7:8%1  (link-local IPv6 addresses with zone index)
         '::(?:ffff(?::0{1,4}){0,1}:){0,1}[^\s:]' + IPV4ADDR,     # ::255.255.255.255  ::ffff:255.255.255.255  ::ffff:0:255.255.255.255 (IPv4-mapped IPv6 addresses and IPv4-translated addresses)
-        '(?:' + IPV6SEG + r':){1,4}:[^\s:]' + IPV4ADDR,         # 2001:db8:3:4::192.0.2.33  64:ff9b::192.0.2.33 (IPv4-Embedded IPv6 Address)
+        '(?:' + IPV6SEG + r':){1,4}:[^\s:]' + IPV4ADDR,          # 2001:db8:3:4::192.0.2.33  64:ff9b::192.0.2.33 (IPv4-Embedded IPv6 Address)
     )
     IPV6ADDR = '|'.join(['(?:{})'.format(g) for g in IPV6GROUPS[::-1]])  # Reverse rows for greedy match
 
